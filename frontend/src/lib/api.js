@@ -1,104 +1,62 @@
+import axios from 'axios'
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
-// Get stored token
-const getToken = () => localStorage.getItem('token')
+// Create axios instance
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
 
-// API request helper
-async function request(endpoint, options = {}) {
-  const token = getToken()
-
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-    ...options,
+// Request interceptor to add auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
   }
+  return config
+})
 
-  const response = await fetch(`${API_URL}${endpoint}`, config)
-
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(data.error || 'Request failed')
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    const message = error.response?.data?.error || 'Request failed'
+    throw new Error(message)
   }
-
-  return data
-}
+)
 
 // Auth API
 export const authAPI = {
-  register: (data) => request('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-
-  login: (email, password) => request('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  }),
-
-  getMe: () => request('/auth/me'),
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  getMe: () => api.get('/auth/me'),
 }
 
 // Companies API
 export const companiesAPI = {
-  getBySlug: (slug) => request(`/companies/slug/${slug}`),
-
-  update: (id, data) => request(`/companies/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
+  getBySlug: (slug) => api.get(`/companies/slug/${slug}`),
+  update: (id, data) => api.put(`/companies/${id}`, data),
 }
 
 // Sections API
 export const sectionsAPI = {
-  getPublic: (companyId) => request(`/sections/public/${companyId}`),
-
-  getAll: (companyId) => request(`/sections/company/${companyId}`),
-
-  create: (data) => request('/sections', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-
-  update: (id, data) => request(`/sections/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-
-  updateOrder: (sections) => request('/sections/bulk/order', {
-    method: 'PUT',
-    body: JSON.stringify({ sections }),
-  }),
-
-  delete: (id) => request(`/sections/${id}`, {
-    method: 'DELETE',
-  }),
+  getPublic: (companyId) => api.get(`/sections/public/${companyId}`),
+  getAll: (companyId) => api.get(`/sections/company/${companyId}`),
+  create: (data) => api.post('/sections', data),
+  update: (id, data) => api.put(`/sections/${id}`, data),
+  updateOrder: (sections) => api.put('/sections/bulk/order', { sections }),
+  delete: (id) => api.delete(`/sections/${id}`),
 }
 
 // Jobs API
 export const jobsAPI = {
-  getPublic: (companyId) => request(`/jobs/public/${companyId}`),
-
-  getAll: (companyId) => request(`/jobs/company/${companyId}`),
-
-  getOne: (id) => request(`/jobs/${id}`),
-
-  create: (data) => request('/jobs', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-
-  update: (id, data) => request(`/jobs/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-
-  delete: (id) => request(`/jobs/${id}`, {
-    method: 'DELETE',
-  }),
+  getPublic: (companyId) => api.get(`/jobs/public/${companyId}`),
+  getAll: (companyId) => api.get(`/jobs/company/${companyId}`),
+  create: (data) => api.post('/jobs', data),
+  update: (id, data) => api.put(`/jobs/${id}`, data),
+  delete: (id) => api.delete(`/jobs/${id}`),
 }
 
 export default { authAPI, companiesAPI, sectionsAPI, jobsAPI }

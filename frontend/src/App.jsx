@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import Login from './pages/auth/Login'
-import Register from './pages/auth/Register'
 import Dashboard from './pages/dashboard/Dashboard'
 import Editor from './pages/dashboard/Editor'
 import Preview from './pages/dashboard/Preview'
@@ -24,7 +23,6 @@ function AppRoutes() {
     <Routes>
       {/* Auth Routes */}
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
 
       {/* Dashboard redirect */}
       <Route
@@ -78,7 +76,7 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
+      <AuthProvider> {/* Everything inside can access the box */}
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>

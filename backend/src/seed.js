@@ -32,6 +32,12 @@ const sampleRecruiters = [
     companySlug: 'techcorp',
   },
   {
+    email: 'hr@techcorp.com',
+    password: 'password123',
+    name: 'Sarah Johnson',
+    companySlug: 'techcorp',
+  },
+  {
     email: 'hr@greenenergy.com',
     password: 'password123',
     name: 'Jane Doe',

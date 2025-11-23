@@ -90,7 +90,7 @@ src/
 ├── hooks/               # Custom React hooks
 ├── lib/                 # Third-party configs (Supabase)
 ├── pages/
-│   ├── auth/            # Login, Register
+│   ├── auth/            # Login
 │   ├── dashboard/       # Editor, Preview, Jobs
 │   └── public/          # CareersPage
 └── utils/               # Helper functions
@@ -101,7 +101,6 @@ src/
 | Route | Description | Access |
 |-------|-------------|--------|
 | `/login` | Recruiter login | Public |
-| `/register` | Recruiter registration | Public |
 | `/:companySlug/edit` | Dashboard editor | Protected |
 | `/:companySlug/preview` | Preview mode | Protected |
 | `/:companySlug/jobs` | Job management | Protected |

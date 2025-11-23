@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { authAPI, companiesAPI } from '../lib/api'
 
+// Create an empty box
 const AuthContext = createContext({})
 
+// Create a hook to easily access the box
 export const useAuth = () => useContext(AuthContext)
 
 export function AuthProvider({ children }) {
+  // These are the "items" stored in the box
   const [user, setUser] = useState(null)
   const [company, setCompany] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -19,7 +22,7 @@ export function AuthProvider({ children }) {
       setLoading(false)
     }
   }, [])
-
+  // Function to update the box
   const fetchCurrentUser = async () => {
     try {
       const data = await authAPI.getMe()
@@ -33,28 +36,6 @@ export function AuthProvider({ children }) {
       setCompany(null)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const signUp = async (email, password, name, companyName, companySlug) => {
-    try {
-      const data = await authAPI.register({
-        email,
-        password,
-        name,
-        companyName,
-        companySlug,
-      })
-
-      // Store token
-      localStorage.setItem('token', data.token)
-
-      setUser(data.user)
-      setCompany(data.company)
-
-      return { data, error: null }
-    } catch (error) {
-      return { data: null, error }
     }
   }
 
@@ -96,7 +77,6 @@ export function AuthProvider({ children }) {
     user,
     company,
     loading,
-    signUp,
     signIn,
     signOut,
     refreshCompany,
@@ -104,7 +84,16 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+     {children} {/*   <AppRoutes />    ← this becomes "children" */}
     </AuthContext.Provider>
   )
 }
+
+//  The Flow
+
+//   1. AuthProvider wraps AppRoutes
+//   2. Provider makes "value" available
+//   3. Any component inside can call useAuth()
+//   4. useAuth() grabs from "value"
+
+//   That's it! Provider = wrapper that shares, children = what's wrapped inside. 🎁

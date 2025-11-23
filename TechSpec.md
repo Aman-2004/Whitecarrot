@@ -38,8 +38,7 @@ App
 ├── AuthProvider
 │   └── AppRoutes
 │       ├── Auth Pages
-│       │   ├── Login
-│       │   └── Register
+│       │   └── Login
 │       ├── Dashboard (Protected)
 │       │   ├── Editor
 │       │   │   ├── BrandingEditor
@@ -168,11 +167,10 @@ All tables have RLS enabled with the following policies:
 
 ### Authentication Flow
 
-1. User registers with email/password
-2. Supabase Auth creates user in `auth.users`
-3. Application creates company and recruiter records
-4. Session stored in localStorage
-5. Protected routes check auth state via AuthContext
+1. User logs in with email/password
+2. Backend validates credentials against database
+3. JWT token issued and stored in localStorage
+4. Protected routes check auth state via AuthContext
 
 ## Key Technical Decisions
 
