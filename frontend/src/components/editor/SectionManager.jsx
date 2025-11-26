@@ -29,7 +29,7 @@ const SECTION_TYPES = [
   { value: 'custom', label: 'Custom Section' },
 ]
 
-export default function SectionManager({ sections, companyId, loading, refetchSections }) {
+export default function SectionManager({ sections, companyId, loading }) {
   const queryClient = useQueryClient()
   const [editingSection, setEditingSection] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -43,12 +43,13 @@ export default function SectionManager({ sections, companyId, loading, refetchSe
     })
   )
 
-  // Add section mutation
+  // Add section mutation uses setQueryData to append new section
   const addMutation = useMutation({
     mutationFn: (data) => sectionsAPI.create(data),
     onSuccess: (newSection) => {
-      queryClient.invalidateQueries({ queryKey: ['sections', companyId] })
-      refetchSections?.()
+      queryClient.setQueryData(['sections', companyId], (old) =>
+        [...(old || []), newSection].sort((a, b) => a.order_index - b.order_index)
+      )
       setShowAddModal(false)
       setNewSectionTitle('')
       setNewSectionType('custom')
@@ -58,9 +59,10 @@ export default function SectionManager({ sections, companyId, loading, refetchSe
   // Update section mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }) => sectionsAPI.update(id, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', companyId] })
-      refetchSections?.()
+    onSuccess: (updatedSection) => {
+      queryClient.setQueryData(['sections', companyId], (old) =>
+        old?.map((s) => s.id === updatedSection.id ? updatedSection : s)
+      )
       setEditingSection(null)
     },
   })
@@ -68,9 +70,10 @@ export default function SectionManager({ sections, companyId, loading, refetchSe
   // Delete section mutation
   const deleteMutation = useMutation({
     mutationFn: (id) => sectionsAPI.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', companyId] })
-      refetchSections?.()
+    onSuccess: (_, deletedId) => {
+      queryClient.setQueryData(['sections', companyId], (old) =>
+        old?.filter((s) => s.id !== deletedId)
+      )
     },
   })
 
@@ -80,7 +83,7 @@ export default function SectionManager({ sections, companyId, loading, refetchSe
   })
 
   const handleDragEnd = async (event) => {
-    const { active, over } = event
+    const { active, over } = event //// active = dragged item,over = drop target
 
     if (active.id !== over?.id) {
       const oldIndex = sections.findIndex((s) => s.id === active.id)
@@ -93,13 +96,15 @@ export default function SectionManager({ sections, companyId, loading, refetchSe
         })
       )
 
-      // Update order via API
+      // Update cache immediately (optimistic)
+      queryClient.setQueryData(['sections', companyId], newSections)
+
+      // Sync with backend
       const orderUpdates = newSections.map((s) => ({
         id: s.id,
         order_index: s.order_index,
       }))
       await orderMutation.mutateAsync(orderUpdates)
-      refetchSections?.()
     }
   }
 

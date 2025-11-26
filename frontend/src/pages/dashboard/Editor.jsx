@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 
 export default function Editor() {
-  const { company, signOut, refreshCompany } = useAuth()
+  const { company, signOut, updateCompany } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('branding')
 
@@ -23,7 +23,6 @@ export default function Editor() {
   const {
     data: sections = [],
     isLoading,
-    refetch: refetchSections,
   } = useQuery({
     queryKey: ['sections', company?.id],
     queryFn: () => sectionsAPI.getAll(company.id),
@@ -110,14 +109,13 @@ export default function Editor() {
         {/* Tab Content */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           {activeTab === 'branding' && (
-            <BrandingEditor company={company} onUpdate={refreshCompany} />
+            <BrandingEditor company={company} onUpdate={updateCompany} />
           )}
           {activeTab === 'sections' && (
             <SectionManager
               sections={sections}
               companyId={company.id}
               loading={isLoading}
-              refetchSections={refetchSections}
             />
           )}
         </div>

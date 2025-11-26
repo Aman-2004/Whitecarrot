@@ -12,8 +12,8 @@ export default function BrandingEditor({ company, onUpdate }) {
   // Color save mutation
   const colorMutation = useMutation({
     mutationFn: (colors) => companiesAPI.update(company.id, colors),
-    onSuccess: () => {
-      onUpdate()
+    onSuccess: (updatedCompany) => {
+      onUpdate(updatedCompany)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     },
@@ -26,8 +26,8 @@ export default function BrandingEditor({ company, onUpdate }) {
     setUploading(true)
     try {
       // Upload via backend API (bypasses Supabase RLS)
-      await companiesAPI.uploadFile(company.id, file, type)
-      onUpdate()
+      const updatedCompany = await companiesAPI.uploadFile(company.id, file, type)
+      onUpdate(updatedCompany)
     } catch (error) {
       console.error('Upload error:', error)
       alert(error.message || 'Failed to upload file.')

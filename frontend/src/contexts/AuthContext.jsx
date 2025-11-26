@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { authAPI, companiesAPI } from '../lib/api'
+import { authAPI } from '../lib/api'
 
 // Create an empty box
 const AuthContext = createContext({})
@@ -73,6 +73,11 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Update company state directly without refetching
+  const updateCompany = (updatedCompany) => {
+    setCompany(prev => ({ ...prev, ...updatedCompany }))
+  }
+
   const value = {
     user,
     company,
@@ -80,6 +85,7 @@ export function AuthProvider({ children }) {
     signIn,
     signOut,
     refreshCompany,
+    updateCompany,
   }
 
   return (
