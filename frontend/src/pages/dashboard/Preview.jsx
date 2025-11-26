@@ -59,23 +59,23 @@ export default function Preview() {
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Back to Editor
+                <span className="hidden sm:inline">Back to Editor</span>
               </Link>
             </div>
 
-            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 sm:gap-2 bg-gray-100 rounded-lg p-1">
               {viewModes.map((mode) => (
                 <button
                   key={mode.id}
                   onClick={() => setViewMode(mode.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition ${
+                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-md transition ${
                     viewMode === mode.id
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <mode.icon className="h-4 w-4" />
-                  <span className="text-sm">{mode.label}</span>
+                  <span className="hidden sm:inline text-sm">{mode.label}</span>
                 </button>
               ))}
             </div>
@@ -84,10 +84,10 @@ export default function Preview() {
               href={`/${company.slug}/careers`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               <ExternalLink className="h-4 w-4" />
-              View Live Page
+              <span className="hidden sm:inline">View Live Page</span>
             </a>
           </div>
         </div>
@@ -107,6 +107,7 @@ export default function Preview() {
               company={company}
               sections={sections}
               jobs={jobs}
+              viewMode={viewMode}
             />
           )}
         </div>

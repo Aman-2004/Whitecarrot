@@ -1,6 +1,7 @@
 import { MapPin, Clock, Briefcase } from 'lucide-react'
 
-export default function CareersPreview({ company, sections, jobs }) {
+export default function CareersPreview({ company, sections, jobs, viewMode = 'desktop' }) {
+  const isMobile = viewMode === 'mobile'
   return (
     <div className="min-h-screen">
       {/* Header/Banner */}
@@ -97,12 +98,12 @@ export default function CareersPreview({ company, sections, jobs }) {
                   key={job.id}
                   className="border border-gray-200 rounded-lg p-5 hover:border-gray-300 hover:shadow-sm transition cursor-pointer"
                 >
-                  <div className="flex justify-between items-start">
+                  <div className={`flex gap-3 flex-col sm:flex-row sm:justify-between sm:items-start ${isMobile ? '!flex-col !items-stretch' : ''}`}>
                     <div>
                       <h3 className="font-semibold text-gray-900 text-lg">
                         {job.title}
                       </h3>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                      <div className={`flex flex-wrap items-center mt-2 text-sm text-gray-600 gap-3 sm:gap-4 ${isMobile ? '!gap-3' : ''}`}>
                         {job.location && (
                           <span className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
@@ -122,9 +123,14 @@ export default function CareersPreview({ company, sections, jobs }) {
                           </span>
                         )}
                       </div>
+                      {job.description && (
+                        <p className="mt-3 text-gray-600 text-sm line-clamp-2">
+                          {job.description}
+                        </p>
+                      )}
                     </div>
                     <button
-                      className="px-4 py-2 text-sm font-medium rounded-lg transition"
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition shrink-0 w-full sm:w-auto ${isMobile ? '!w-full' : ''}`}
                       style={{
                         backgroundColor: company.primary_color,
                         color: 'white',
@@ -133,11 +139,6 @@ export default function CareersPreview({ company, sections, jobs }) {
                       Apply
                     </button>
                   </div>
-                  {job.description && (
-                    <p className="mt-3 text-gray-600 text-sm line-clamp-2">
-                      {job.description}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
