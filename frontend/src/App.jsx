@@ -2,16 +2,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import Login from './pages/auth/Login'
-import Dashboard from './pages/dashboard/Dashboard'
 import Editor from './pages/dashboard/Editor'
 import Preview from './pages/dashboard/Preview'
-import JobsManager from './pages/dashboard/JobsManager'
 import CareersPage from './pages/public/CareersPage'
 
 function AppRoutes() {
   const { company, loading } = useAuth()
 
-  if (loading) {
+  if (loading) {// Only 1 Scenario: App Start with Token loading is true initially
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -24,16 +22,12 @@ function AppRoutes() {
       {/* Auth Routes */}
       <Route path="/login" element={<Login />} />
 
-      {/* Dashboard redirect */}
+      {/* Redirect to edit page */}
       <Route
         path="/"
         element={
           <ProtectedRoute>
-            {company ? (
-              <Navigate to={`/${company.slug}/edit`} replace />
-            ) : (
-              <Dashboard />
-            )}
+            <Navigate to={`/${company?.slug}/edit`} replace />
           </ProtectedRoute>
         }
       />
@@ -52,14 +46,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Preview />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/:companySlug/jobs"
-        element={
-          <ProtectedRoute>
-            <JobsManager />
           </ProtectedRoute>
         }
       />

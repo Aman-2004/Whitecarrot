@@ -38,6 +38,27 @@ export const authAPI = {
 export const companiesAPI = {
   getBySlug: (slug) => api.get(`/companies/slug/${slug}`),
   update: (id, data) => api.put(`/companies/${id}`, data),
+  uploadFile: async (id, file, type) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', type)
+
+    const token = localStorage.getItem('token')
+    const response = await fetch(`${API_URL}/companies/${id}/upload`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Upload failed')
+    }
+
+    return response.json()
+  },
 }
 
 // Sections API
@@ -54,9 +75,7 @@ export const sectionsAPI = {
 export const jobsAPI = {
   getPublic: (companyId) => api.get(`/jobs/public/${companyId}`),
   getAll: (companyId) => api.get(`/jobs/company/${companyId}`),
-  create: (data) => api.post('/jobs', data),
-  update: (id, data) => api.put(`/jobs/${id}`, data),
-  delete: (id) => api.delete(`/jobs/${id}`),
 }
 
 export default { authAPI, companiesAPI, sectionsAPI, jobsAPI }
+

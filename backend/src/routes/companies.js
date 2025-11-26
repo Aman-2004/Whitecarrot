@@ -1,7 +1,15 @@
 const express = require('express')
 const { z } = require('zod')
+const multer = require('multer')
 const pool = require('../config/db')
+const supabase = require('../config/supabase')
 const auth = require('../middleware/auth')
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+})
 
 const router = express.Router()
 
@@ -96,6 +104,73 @@ router.put('/:id', auth, async (req, res) => {
   } catch (error) {
     console.error('Update company error:', error)
     res.status(500).json({ error: 'Failed to update company' })
+  }
+})
+
+// Upload file (logo, banner, or culture video)
+router.post('/:id/upload', auth, upload.single('file'), async (req, res) => {
+  const { id } = req.params
+  const { type } = req.body // 'logo', 'banner', or 'culture_video'
+
+  // Validate UUID
+  const uuidSchema = z.string().uuid()
+  const idValidation = uuidSchema.safeParse(id)
+  if (!idValidation.success) {
+    return res.status(400).json({ error: 'Invalid company ID' })
+  }
+
+  // Check authorization
+  if (req.user.company_id !== id) {
+    return res.status(403).json({ error: 'Not authorized' })
+  }
+
+  // Validate type
+  const validTypes = ['logo', 'banner', 'culture_video']
+  if (!validTypes.includes(type)) {
+    return res.status(400).json({ error: 'Invalid upload type. Must be logo, banner, or culture_video' })
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file provided' })
+  }
+
+  if (!supabase) {
+    return res.status(500).json({ error: 'Storage not configured. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' })
+  }
+
+  try {
+    const fileExt = req.file.originalname.split('.').pop()
+    const fileName = `${id}/${type}-${Date.now()}.${fileExt}`
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('company-assets')
+      .upload(fileName, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: true,
+      })
+
+    if (uploadError) {
+      console.error('Supabase upload error:', uploadError)
+      return res.status(500).json({ error: 'Failed to upload file to storage' })
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('company-assets')
+      .getPublicUrl(fileName)
+
+    // Update company record
+    const updateField = type === 'logo' ? 'logo_url' : type === 'banner' ? 'banner_url' : 'culture_video_url'
+    const result = await pool.query(
+      `UPDATE companies SET ${updateField} = $1 WHERE id = $2 RETURNING *`,
+      [publicUrl, id]
+    )
+
+    res.json({ url: publicUrl, company: result.rows[0] })
+  } catch (error) {
+    console.error('Upload error:', error)
+    res.status(500).json({ error: 'Failed to upload file' })
   }
 })
 

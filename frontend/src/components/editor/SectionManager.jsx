@@ -29,7 +29,7 @@ const SECTION_TYPES = [
   { value: 'custom', label: 'Custom Section' },
 ]
 
-export default function SectionManager({ sections, setSections, companyId, loading, refetchSections }) {
+export default function SectionManager({ sections, companyId, loading, refetchSections }) {
   const queryClient = useQueryClient()
   const [editingSection, setEditingSection] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -68,12 +68,9 @@ export default function SectionManager({ sections, setSections, companyId, loadi
   // Delete section mutation
   const deleteMutation = useMutation({
     mutationFn: (id) => sectionsAPI.delete(id),
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['sections', companyId] })
-      setSections(sections.filter((s) => s.id !== id))
-    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections', companyId] })
+      refetchSections?.()
     },
   })
 
@@ -96,14 +93,13 @@ export default function SectionManager({ sections, setSections, companyId, loadi
         })
       )
 
-      setSections(newSections)
-
       // Update order via API
       const orderUpdates = newSections.map((s) => ({
         id: s.id,
         order_index: s.order_index,
       }))
-      orderMutation.mutate(orderUpdates)
+      await orderMutation.mutateAsync(orderUpdates)
+      refetchSections?.()
     }
   }
 
@@ -112,13 +108,6 @@ export default function SectionManager({ sections, setSections, companyId, loadi
     if (!section) return
 
     const newVisibility = !section.is_visible
-
-    // Optimistic update
-    setSections(
-      sections.map((s) =>
-        s.id === sectionId ? { ...s, is_visible: newVisibility } : s
-      )
-    )
 
     updateMutation.mutate({ id: sectionId, updates: { is_visible: newVisibility } })
   }
@@ -142,11 +131,6 @@ export default function SectionManager({ sections, setSections, companyId, loadi
   }
 
   const handleSaveSection = (sectionId, updates) => {
-    // Optimistic update
-    setSections(
-      sections.map((s) => (s.id === sectionId ? { ...s, ...updates } : s))
-    )
-
     updateMutation.mutate({ id: sectionId, updates })
   }
 
@@ -274,7 +258,6 @@ export default function SectionManager({ sections, setSections, companyId, loadi
           section={editingSection}
           onSave={(updates) => handleSaveSection(editingSection.id, updates)}
           onClose={() => setEditingSection(null)}
-          isSaving={updateMutation.isPending}
         />
       )}
     </div>

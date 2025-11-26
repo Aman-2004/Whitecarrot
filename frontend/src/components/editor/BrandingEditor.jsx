@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabase'
 import { companiesAPI } from '../../lib/api'
 import { Upload, Image, Video, Loader2, Check } from 'lucide-react'
 
@@ -26,29 +25,12 @@ export default function BrandingEditor({ company, onUpdate }) {
 
     setUploading(true)
     try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${company.id}/${type}-${Date.now()}.${fileExt}`
-      const filePath = `${fileName}`
-
-      // Upload to Supabase Storage (keep this as per user request)
-      const { error: uploadError } = await supabase.storage
-        .from('company-assets')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('company-assets')
-        .getPublicUrl(filePath)
-
-      // Update company via API
-      const updateField = type === 'logo' ? 'logo_url' : type === 'banner' ? 'banner_url' : 'culture_video_url'
-      await companiesAPI.update(company.id, { [updateField]: publicUrl })
-
+      // Upload via backend API (bypasses Supabase RLS)
+      await companiesAPI.uploadFile(company.id, file, type)
       onUpdate()
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload file. Make sure the storage bucket is configured.')
+      alert(error.message || 'Failed to upload file.')
     } finally {
       setUploading(false)
     }
@@ -192,7 +174,7 @@ export default function BrandingEditor({ company, onUpdate }) {
       {/* Colors */}
       <div className="border border-gray-200 rounded-lg p-6">
         <h3 className="font-medium text-gray-900 mb-4">Brand Colors</h3>
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm text-gray-600 mb-2">
               Primary Color
@@ -245,25 +227,7 @@ export default function BrandingEditor({ company, onUpdate }) {
           {colorMutation.isPending ? 'Saving...' : saved ? 'Saved!' : 'Save Colors'}
         </button>
       </div>
-
-      {/* Preview */}
-      <div className="border border-gray-200 rounded-lg p-6">
-        <h3 className="font-medium text-gray-900 mb-4">Color Preview</h3>
-        <div className="flex gap-4">
-          <div
-            className="w-32 h-20 rounded-lg flex items-center justify-center text-white font-medium"
-            style={{ backgroundColor: primaryColor }}
-          >
-            Primary
-          </div>
-          <div
-            className="w-32 h-20 rounded-lg flex items-center justify-center text-white font-medium"
-            style={{ backgroundColor: secondaryColor }}
-          >
-            Secondary
-          </div>
-        </div>
-      </div>
+     
     </div>
   )
 }

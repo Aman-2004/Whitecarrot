@@ -47,14 +47,6 @@ export default function Preview() {
     }
   }
 
-  if (!company) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
