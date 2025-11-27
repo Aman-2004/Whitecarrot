@@ -1,13 +1,34 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import imageCompression from 'browser-image-compression'
 import { companiesAPI } from '../../lib/api'
 import { Upload, Image, Video, Loader2, Check } from 'lucide-react'
+
+// Compress image before upload
+const compressImage = async (file, type) => {
+  // Skip compression for non-images (videos)
+  if (!file.type.startsWith('image/')) return file
+
+  const options = {
+    maxSizeMB: type === 'logo' ? 0.2 : 0.5, // 200KB for logo, 500KB for banner
+    maxWidthOrHeight: type === 'logo' ? 400 : 1920,
+    useWebWorker: true,
+  }
+  return imageCompression(file, options)
+}
 
 export default function BrandingEditor({ company, onUpdate }) {
   const [uploading, setUploading] = useState(false)
   const [primaryColor, setPrimaryColor] = useState(company?.primary_color || '#3B82F6')
   const [secondaryColor, setSecondaryColor] = useState(company?.secondary_color || '#1E40AF')
   const [saved, setSaved] = useState(false)
+
+  // Optimistic preview URLs (local blob URLs shown immediately)
+  const [previewUrls, setPreviewUrls] = useState({
+    logo: null,
+    banner: null,
+    culture_video: null,
+  })
 
   // Color save mutation
   const colorMutation = useMutation({
@@ -23,12 +44,24 @@ export default function BrandingEditor({ company, onUpdate }) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // 1. Show optimistic preview IMMEDIATELY (instant feedback)
+    const localPreviewUrl = URL.createObjectURL(file)
+    setPreviewUrls(prev => ({ ...prev, [type]: localPreviewUrl }))
+
     setUploading(true)
     try {
-      // Upload via backend API (bypasses Supabase RLS)
-      const updatedCompany = await companiesAPI.uploadFile(company.id, file, type)
-      onUpdate(updatedCompany)
+      // 2. Compress image (skip for videos)
+      const compressedFile = await compressImage(file, type)
+
+      // 3. Upload compressed file to backend
+      const response = await companiesAPI.uploadFile(company.id, compressedFile, type)
+      onUpdate(response.company)
+
+      // 4. Clear optimistic preview (real URL now in company state)
+      setPreviewUrls(prev => ({ ...prev, [type]: null }))
     } catch (error) {
+      // On error, clear optimistic preview
+      setPreviewUrls(prev => ({ ...prev, [type]: null }))
       console.error('Upload error:', error)
       alert(error.message || 'Failed to upload file.')
     } finally {
@@ -59,9 +92,9 @@ export default function BrandingEditor({ company, onUpdate }) {
           Company Logo
         </h3>
         <div className="flex items-center gap-6">
-          {company?.logo_url ? (
+          {(previewUrls.logo || company?.logo_url) ? (
             <img
-              src={company.logo_url}
+              src={previewUrls.logo || company.logo_url}
               alt="Company logo"
               className="h-20 w-20 object-contain bg-gray-100 rounded-lg"
             />
@@ -100,9 +133,9 @@ export default function BrandingEditor({ company, onUpdate }) {
           Banner Image
         </h3>
         <div className="space-y-4">
-          {company?.banner_url ? (
+          {(previewUrls.banner || company?.banner_url) ? (
             <img
-              src={company.banner_url}
+              src={previewUrls.banner || company.banner_url}
               alt="Company banner"
               className="w-full h-48 object-cover rounded-lg"
             />
@@ -139,9 +172,9 @@ export default function BrandingEditor({ company, onUpdate }) {
           Culture Video (Optional)
         </h3>
         <div className="space-y-4">
-          {company?.culture_video_url ? (
+          {(previewUrls.culture_video || company?.culture_video_url) ? (
             <video
-              src={company.culture_video_url}
+              src={previewUrls.culture_video || company.culture_video_url}
               controls
               className="w-full h-64 rounded-lg bg-black"
             />

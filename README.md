@@ -1,134 +1,237 @@
 # Careers Page Builder
 
-A mini ATS (Applicant Tracking System) that allows companies to create and customize their own branded careers pages.
+A mini ATS that enables companies to create branded, customizable careers pages with drag-and-drop sections and job listings.
 
-## Features
+---
 
-### Recruiter Dashboard
-- **Branding Customization**: Upload logo, banner, and culture video
-- **Color Theming**: Set primary and secondary brand colors
-- **Section Management**: Add, edit, reorder, and toggle visibility of content sections
-- **Drag & Drop**: Reorder sections with intuitive drag and drop
-- **Job Management**: Create, edit, activate/deactivate job listings
-- **Live Preview**: Preview how the careers page looks across devices
-
-### Public Careers Page
-- **Company Branding**: Displays company logo, banner, and colors
-- **Content Sections**: About Us, Mission, Values, Culture, etc.
-- **Job Listings**: Browse all active positions
-- **Search & Filter**: Search jobs by title, filter by location and job type
-- **Responsive Design**: Mobile-friendly layout
-- **SEO Ready**: Proper meta tags and semantic HTML
-
-## Tech Stack
-
-- **Frontend**: React 19 + Vite
-- **Styling**: Tailwind CSS 4
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **File Storage**: Supabase Storage
-- **Drag & Drop**: @dnd-kit
-- **Icons**: Lucide React
-- **Routing**: React Router v7
-
-## Getting Started
+## How to Run
 
 ### Prerequisites
 - Node.js 18+
-- npm or yarn
-- Supabase account
+- npm
+- Supabase account (free tier works)
 
-### Installation
+### 1. Clone & Setup Supabase
 
-1. Clone the repository:
 ```bash
 git clone <repository-url>
 cd whitecarrot
 ```
 
-2. Install dependencies:
+**Database Setup:**
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to **SQL Editor** → paste contents of `supabase/schema.sql` → Run
+
+**Storage Setup:**
+1. Go to **Storage** → **New Bucket**
+2. Name: `company-assets` → Enable **Public bucket** → Create
+
+**Get Credentials** (Settings → API):
+- Project URL
+- anon public key
+- service_role key
+- Connection string (Settings → Database)
+
+### 2. Run Backend
+
 ```bash
+cd backend
 npm install
-```
-
-3. Create a Supabase project at [supabase.com](https://supabase.com)
-
-4. Run the database schema:
-   - Go to your Supabase dashboard > SQL Editor
-   - Copy and run the contents of `supabase/schema.sql`
-
-5. Create a storage bucket:
-   - Go to Storage in Supabase dashboard
-   - Create a bucket named `company-assets`
-   - Set it to public
-
-6. Configure environment variables:
-```bash
 cp .env.example .env
 ```
-Edit `.env` with your Supabase credentials:
-```
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+Edit `backend/.env`:
+```env
+DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres
+SUPABASE_URL=https://[PROJECT-ID].supabase.co
+SUPABASE_SERVICE_ROLE_KEY=[SERVICE-ROLE-KEY]
+JWT_SECRET=your-random-secret-key
+PORT=3000
+FRONTEND_URL=http://localhost:5173
 ```
 
-7. Start the development server:
 ```bash
 npm run dev
 ```
 
-## Project Structure
+### 3. Run Frontend
 
-```
-src/
-├── components/
-│   ├── common/          # Shared components (ProtectedRoute, etc.)
-│   ├── editor/          # Dashboard editor components
-│   ├── preview/         # Preview components
-│   └── public/          # Public page components
-├── contexts/            # React contexts (Auth)
-├── hooks/               # Custom React hooks
-├── lib/                 # Third-party configs (Supabase)
-├── pages/
-│   ├── auth/            # Login
-│   ├── dashboard/       # Editor, Preview, Jobs
-│   └── public/          # CareersPage
-└── utils/               # Helper functions
-```
-
-## Routes
-
-| Route | Description | Access |
-|-------|-------------|--------|
-| `/login` | Recruiter login | Public |
-| `/:companySlug/edit` | Dashboard editor | Protected |
-| `/:companySlug/preview` | Preview mode | Protected |
-| `/:companySlug/jobs` | Job management | Protected |
-| `/:companySlug/careers` | Public careers page | Public |
-
-## Database Schema
-
-### Tables
-- **companies**: Company profile and branding
-- **recruiters**: Recruiter profiles linked to auth.users
-- **careers_sections**: Content sections for careers page
-- **jobs**: Job listings
-
-See `supabase/schema.sql` for full schema with RLS policies.
-
-## Deployment
-
-### Vercel
-1. Push to GitHub
-2. Import in Vercel
-3. Add environment variables
-4. Deploy
-
-### Build Command
 ```bash
-npm run build
+cd frontend
+npm install
+cp .env.example .env
 ```
 
-## License
+Edit `frontend/.env`:
+```env
+VITE_SUPABASE_URL=https://[PROJECT-ID].supabase.co
+VITE_SUPABASE_ANON_KEY=[ANON-PUBLIC-KEY]
+VITE_API_URL=http://localhost:3000/api
+```
 
-MIT
+```bash
+npm run dev
+```
+
+### 4. Seed Test Data (Optional)
+
+```bash
+cd backend && node src/seed.js
+```
+
+**Test Credentials:**
+| Email | Password | Company |
+|-------|----------|---------|
+| sarah@techcorp.com | password123 | TechCorp |
+| mike@techcorp.com | password123 | TechCorp |
+| alex@startupxyz.com | password123 | StartupXYZ |
+
+### URLs
+- Login: http://localhost:5173/login
+- Editor: http://localhost:5173/techcorp/edit
+- Public Page: http://localhost:5173/techcorp/careers
+
+---
+
+## What I Built
+
+### Recruiter Features
+
+**Brand Customization:**
+- Upload company logo, banner image, and culture video
+- Set primary/secondary brand colors
+- Instant preview with image compression for faster uploads
+
+**Content Sections:**
+- Add sections: About, Mission, Values, Culture, Life, Benefits, Custom
+- Drag-and-drop reordering
+- Toggle visibility without deleting
+- Edit/delete sections
+
+**Preview Mode:**
+- Desktop, Tablet, Mobile viewport testing
+- View live public page
+
+**Per-Company Data:**
+- Each company has isolated data
+- Multiple recruiters per company
+- Company-specific URL slugs
+
+### Candidate Features
+
+**Company Information:**
+- View branding (logo, banner, colors)
+- Read content sections
+- Watch culture video
+
+**Job Browsing:**
+- Job cards with title, department, location, type, salary
+- Real-time search (title + description)
+- Filter by location and job type
+- Clear all filters
+
+**Responsive Design:**
+- Mobile-friendly layout
+- Touch-friendly navigation
+- Collapsible filters on mobile
+
+**SEO Optimization:**
+- Dynamic meta tags (title, description)
+- Open Graph & Twitter Cards
+- JSON-LD structured data for Google Jobs
+- Semantic HTML with proper heading hierarchy
+
+---
+
+## Step-by-Step User Guide
+
+### For Recruiters
+
+**1. Login**
+- Navigate to `/login` → Enter email & password → Sign In
+
+**2. Customize Branding** (Branding tab)
+- **Logo**: Click "Upload Logo" → Select image → Auto-compresses & uploads
+- **Banner**: Click "Upload Banner" → Select wide image (1920x400 recommended)
+- **Video**: Click "Upload Video" → Select MP4 (max 50MB)
+- **Colors**: Pick primary/secondary colors → Click "Save Colors"
+
+**3. Manage Sections** (Sections tab)
+- **Add**: Click "Add Section" → Select type → Enter title & content → Save
+- **Edit**: Click pencil icon → Modify → Save
+- **Reorder**: Drag using handle (six dots) → Drop in position
+- **Hide/Show**: Click eye icon
+- **Delete**: Click trash icon
+
+**4. Preview**
+- Click "Preview" in nav bar
+- Test Desktop/Tablet/Mobile views
+- Click "View Live Page" to open public URL
+
+**5. Share**
+- Copy URL: `yourdomain.com/{company-slug}/careers`
+- Share on website, social media, job boards
+
+### For Candidates
+
+**1. Visit Careers Page**
+- Open the company's careers URL (no login needed)
+
+**2. Explore Company**
+- View banner, logo, brand colors
+- Read content sections (About, Mission, Values, etc.)
+- Watch culture video if available
+
+**3. Browse Jobs**
+- Scroll to "Open Positions" section
+- **Search**: Type keywords in search box (filters instantly)
+- **Filter by Location**: Select from dropdown
+- **Filter by Job Type**: Select Full-time, Part-time, Contract, etc.
+- **Clear Filters**: Click "Clear" button to reset
+
+**4. Apply**
+- Click "Apply Now" on job card
+
+---
+
+## Improvement Plan
+
+### API Improvements
+
+| Improvement | Solution |
+|-------------|----------|
+| Rate Limiting | Install `express-rate-limit`. Add limiters: login (5/15min), uploads (10/hour), API (100/min) |
+| Pagination | Add `page` & `limit` query params to jobs endpoint. Return `{ data, total, totalPages }` |
+| Caching | Use Redis for public endpoints. Set 1-hour TTL, invalidate on updates |
+| Error Handling | Create centralized error middleware. Standardize format: `{ success, data/error }` |
+| Request Logging | Use Winston logger. Log method, path, status, duration for all requests |
+
+### Frontend Improvements
+
+| Improvement | Solution |
+|-------------|----------|
+| Code Splitting | Use `React.lazy()` for routes (Login, Editor, Preview, CareersPage) with Suspense |
+| Loading Skeletons | Create skeleton components for sections list, job cards, branding preview |
+| Error Boundaries | Wrap routes in ErrorBoundary component to catch render errors gracefully |
+| Form Validation | Add inline validation with error messages for login, section editor forms |
+| Image Optimization | Add `loading="lazy"` and `decoding="async"` to all images |
+
+
+### Security Improvements
+
+| Improvement | Solution |
+|-------------|----------|
+| XSS Prevention | Install `dompurify`. Sanitize user-generated content before rendering |
+| File Upload Validation | Validate MIME types. Whitelist: logo (png/jpg), banner (jpg/png), video (mp4) |
+| JWT Validation | Validate JWT_SECRET exists and is 32+ chars in production on startup |
+| CORS Config | Support multiple origins via comma-separated `ALLOWED_ORIGINS` env var |
+
+
+### Features to Add
+
+| Feature | Description |
+|---------|-------------|
+| Job Applications | Application form with resume upload (PDF/DOCX), recruiter dashboard to review |
+| Rich Text Editor | WYSIWYG for section content using TipTap/Slate (bold, lists, links) |
+| Image Gallery | Multiple images per section with lightbox view |
+| Analytics Dashboard | Track page views, job clicks, application rates with charts |
